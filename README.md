@@ -3,7 +3,7 @@ Pi-Control
 
 This project is one which I have been working on for a while. The program will be put on my raspberry pi and will be used to give commands and ask questions. Some of this code is very messy and it has very few comments. I will go back later to do some cleanup and to hopefully add comments.
 
-For some of the parts of the program to work properly you will need to add your own access keys. This is required for the speech recognition and wolfram alpha.
+For some of the parts of the program to work properly you will need to add your own access keys. This is required for the speech recognition and wolfram alpha. To put in your own api keys make a file called ids.key in resources/com/cicc/voiceCont and put the Google API Key on the first line and the Wolfram Alpha API Key on the second line.
 
 Libraries (Files to download)
 ---------------------------------
