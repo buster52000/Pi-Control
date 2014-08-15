@@ -14,6 +14,7 @@ Libraries (Files to download)
 -  [Java FLAC Encoder](http://javaflacencoder.sourceforge.net/) - Jar File Only
 -  [Google Java Client Library Calendar API](https://code.google.com/p/google-api-java-client/) - I recommend using the Google Eclipse plugin to get this
 -  [google-http-client-jackson Jar File](https://code.google.com/p/google-http-java-client/) - For some reason this does not download with the rest of the client lib
+-  [FLAC](https://xiph.org/flac/) - Must be installed on your computer for the program to work properly
 
 Libraries (Included in source)
 ------------------------------
