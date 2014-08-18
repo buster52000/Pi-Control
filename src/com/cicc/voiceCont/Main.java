@@ -69,7 +69,12 @@ public class Main {
 							@Override
 							public void run() {
 								sndMngr.playStopListening();
-								stop();
+								try {
+									stop();
+								} catch (IOException | InterruptedException e) {
+									Speak.say("Error");
+									e.printStackTrace();
+								}
 							}
 						};
 						micTimer = new Timer(true);
@@ -149,14 +154,19 @@ public class Main {
 			@Override
 			public void run() {
 				sndMngr.playStopListening();
-				stop();
+				try {
+					stop();
+				} catch (IOException | InterruptedException e) {
+					Speak.say("Error");
+					e.printStackTrace();
+				}
 			}
 		};
 		micTimer = new Timer(true);
 		micTimer.schedule(task, 5000);
 	}
 
-	public void stop() {
+	public void stop() throws IOException, InterruptedException {
 		if (responding && !action.isOther())
 			return;
 		System.out.println("Stopped");
@@ -193,7 +203,7 @@ public class Main {
 		}
 	}
 
-	public void action(ArrayList<String> text) {
+	public void action(ArrayList<String> text) throws IOException, InterruptedException {
 		int i = 0;
 		boolean didSomething = false;
 		while (i < text.size() && !didSomething) {
