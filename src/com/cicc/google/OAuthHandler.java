@@ -105,7 +105,6 @@ public class OAuthHandler {
 	private void refreshAccessToken() throws IOException {
 		accessToken = null;
 		String response = oAuthUrlRequest(OAUTH_TOKEN_REFRESH_URL, OAUTH_TOKEN_REFRESH_BODY + refreshToken);
-		System.out.println(response);
 		response = response.replaceAll(" ", "");
 		if (response != null && !response.startsWith("{\"error\"")) {
 			accessToken = Utils.substringBetween(response, "\"access_token\":\"", "\"");

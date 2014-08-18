@@ -1,4 +1,4 @@
-package com.cicc.google;
+package com.cicc.google.calendar;
 
 import com.google.api.services.calendar.model.Calendar;
 import com.google.api.services.calendar.model.CalendarList;

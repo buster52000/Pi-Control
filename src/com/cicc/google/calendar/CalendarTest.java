@@ -1,9 +1,10 @@
-package com.cicc.google;
+package com.cicc.google.calendar;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.TimeZone;
 
+import com.cicc.google.OAuthHandler;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.batch.BatchRequest;
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback;

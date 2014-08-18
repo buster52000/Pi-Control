@@ -1,4 +1,4 @@
-package com.cicc.google;
+package com.cicc.google.calendar;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.cicc.google.OAuthHandler;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
@@ -30,41 +31,47 @@ public class CalendarControler {
 
 	private static com.google.api.services.calendar.Calendar client;
 
-	public static void main(String args[]) throws Exception {
-		System.out.println("test");
-		CalendarControler cal = new CalendarControler("buster52000@gmail.com");
-		cal.getEventsOnDate("My Calendar", Calendar.getInstance());
-	}
-
 	public CalendarControler(String email) throws Exception {
 		auth = new OAuthHandler(email);
 		httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 		reloadCredentials();
 	}
 
-	public ArrayList<String> getCalanderIDs() throws IOException, InterruptedException {
+	public ArrayList<String> getCalendarIDs() throws IOException, InterruptedException {
 		if (auth.getExpiresInSeconds() < 5)
 			reloadCredentials();
 		CalendarList cList = client.calendarList().list().execute();
 		ArrayList<String> cIDs = new ArrayList<String>();
 		for (CalendarListEntry ent : cList.getItems())
-			cIDs.add(ent.getSummary());
+			cIDs.add(ent.getId());
 		return cIDs;
+	}
+	
+	public ArrayList<String[]> getCalendarSummaries() throws IOException, InterruptedException {
+		if (auth.getExpiresInSeconds() < 5)
+			reloadCredentials();
+		CalendarList cList = client.calendarList().list().execute();
+		ArrayList<String[]> cSum = new ArrayList<String[]>();
+		for (CalendarListEntry ent : cList.getItems())
+			cSum.add(new String[] {ent.getSummary(), ent.getId()});
+		return cSum;
+	}
+	
+	public ArrayList<String[]> getCalendarNames() throws IOException, InterruptedException {
+		if (auth.getExpiresInSeconds() < 5)
+			reloadCredentials();
+		CalendarList cList = client.calendarList().list().execute();
+		ArrayList<String[]> cNames = new ArrayList<String[]>();
+		for (CalendarListEntry ent : cList.getItems())
+			cNames.add(new String[] {ent.getDescription(), ent.getId()});
+		return cNames;
 	}
 
 	public ArrayList<Event> getEvents(String calID) throws IOException, InterruptedException {
 		if (auth.getExpiresInSeconds() < 5)
 			reloadCredentials();
-		String id = null;
-		for (CalendarListEntry ent : client.calendarList().list().execute().getItems())
-			if (ent.getSummary().equals(calID)) {
-				id = ent.getId();
-				break;
-			}
-		if (id == null)
-			return null;
 		ArrayList<Event> events = new ArrayList<Event>();
-		Events evts = client.events().list(id).execute();
+		Events evts = client.events().list(calID).execute();
 		for (Event evt : evts.getItems())
 			events.add(evt);
 		return events;
@@ -84,7 +91,6 @@ public class CalendarControler {
 				} catch (NullPointerException e) {
 					evtDate = eventDateTime.getDateTime().toStringRfc3339();
 				}
-				System.out.println(evtDate);
 				Matcher matchDate = patternDate.matcher(evtDate);
 				if (matchDate.find()) {
 					String dateStr = matchDate.group();

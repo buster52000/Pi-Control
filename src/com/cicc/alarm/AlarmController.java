@@ -21,7 +21,7 @@ import com.cicc.weather.Weather;
 public abstract class AlarmController {
 
 	public static void main(String args[]) {
-		AlarmController alm = new AlarmController(true) {
+		AlarmController alm = new AlarmController() {
 			
 			@Override
 			public ArrayList<String> speechRec() {
@@ -31,7 +31,7 @@ public abstract class AlarmController {
 			}
 			
 			@Override
-			public void sayTime(boolean schoolDay) {
+			public void sayTime() {
 				System.out.println("Time");
 			}
 		};
@@ -51,23 +51,19 @@ public abstract class AlarmController {
 	// Repeat:1-2-3-4-5-6-7
 	// AlmMode:int
 
-	private final boolean speechEnabled;
 	private ArrayList<Alarm> alarms;
 	private Timer timer;
 
-	public AlarmController(boolean speechEnabled) {
-		this.speechEnabled = speechEnabled;
+	public AlarmController() {
 		alarms = new ArrayList<Alarm>();
 		timer = new Timer();
 		checkAlarmFiles();
 	}
 
 	public void startInteractiveSpeech() {
-		if (!speechEnabled)
-			return;
 		boolean done = false;
 		while (!done) {
-			Speak.say("Please Say a Command to edit alarms");
+			Speak.say("Please Say an alarm configuration command or help for more options");
 			ArrayList<String> saidArr = speechRec();
 			if (saidArr == null || saidArr.size() == 0 || saidArr.contains(null))
 				done = true;
@@ -90,6 +86,9 @@ public abstract class AlarmController {
 						break;
 					} else if (Utils.includes(s, "exit") || Utils.includes(s, "cancel") || saidArr == null || saidArr.size() == 0) {
 						done = true;
+						break;
+					} else if (Utils.includes(s, "help")) {
+						Speak.say("The options are new, delete, edit, list, info, and exit");
 						break;
 					}
 				}
@@ -438,7 +437,7 @@ public abstract class AlarmController {
 		int almMode = alm.getMode();
 		if (almMode == Alarm.ALM_MODE_INFO) {
 			AudioPlayer.playSound(alm.getToneFileName(), true);
-			sayTime(true);
+			sayTime();
 			Weather weather = new Weather();
 			weather.start();
 		} else if (almMode == Alarm.ALM_MODE_SILENT) {
@@ -888,7 +887,7 @@ public abstract class AlarmController {
 		return alarm;
 	}
 
-	public abstract void sayTime(boolean schoolDay);
+	public abstract void sayTime();
 
 	public abstract ArrayList<String> speechRec();
 

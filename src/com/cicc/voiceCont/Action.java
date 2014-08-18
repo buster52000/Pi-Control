@@ -6,11 +6,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
 
@@ -18,12 +15,11 @@ import com.cicc.alarm.AlarmController;
 import com.cicc.alpha.Search;
 import com.cicc.crypt.MainCrpt;
 import com.cicc.geoLoc.GeoLocation;
-import com.cicc.google.CalendarControler;
+import com.cicc.google.calendar.CalendarUI;
 import com.cicc.tts.Speak;
 import com.cicc.tts.Utils;
-import com.smartechz.geoloc.GeoPlanetExplorer;
 import com.cicc.weather.Weather;
-import com.google.api.services.calendar.model.Event;
+import com.smartechz.geoloc.GeoPlanetExplorer;
 
 public abstract class Action {
 
@@ -35,49 +31,14 @@ public abstract class Action {
 	private AlarmController alarm;
 	private String wolframAlphaID;
 	private ArrayList<String> said;
-	private CalendarControler calendarCont;
 	private String email;
+	private CalendarUI calUI;
 
 	public Action(String wolframID) throws Exception {
 		other = false;
 		said = null;
 		wolframAlphaID = wolframID;
 		waSearch = new Search(wolframAlphaID);
-		alarm = new AlarmController(true) {
-
-			@Override
-			public ArrayList<String> speechRec() {
-				return speechRecognition();
-			}
-
-			@Override
-			public void sayTime(boolean schoolDay) {
-				int day = 0;
-				if(schoolDay) {
-					try {
-						String calID = null;
-						Pattern pattern = Pattern.compile("pburg");
-						for(String id : calendarCont.getCalanderIDs()) {
-							Matcher match = pattern.matcher(id);
-							if(match.find()) {
-								calID = id;
-								break;
-							}
-						}
-						if(calID == null)
-							schoolDay = false;
-						else {
-							ArrayList<Event> events = calendarCont.getEventsOnDate(calID, Calendar.getInstance());
-						}
-					} catch (IOException | InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				time();
-				if(schoolDay && day != 0)
-					Speak.say("");
-			}
-		};
 		try {
 			File emailFile = new File(emailFileName);
 			String tmpEmail = null;
@@ -99,13 +60,31 @@ public abstract class Action {
 				write.write(email);
 				write.close();
 			}
-			calendarCont = new CalendarControler(email);
-		} catch (GeneralSecurityException | IOException | InterruptedException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		alarm = new AlarmController() {
+
+			@Override
+			public ArrayList<String> speechRec() {
+				return speechRecognition();
+			}
+
+			@Override
+			public void sayTime() {
+				time();
+			}
+		};
+		calUI = new CalendarUI(email) {
+			
+			@Override
+			public ArrayList<String> speechRec() {
+				return speechRecognition();
+			}
+		};
 	}
 
-	public boolean doSomething(String text) {
+	public boolean doSomething(String text) throws IOException, InterruptedException {
 		if (text == null) {
 			Main.say("Command Timed out");
 		} else if (Utils.includes(text, "cancel")) {
@@ -158,7 +137,7 @@ public abstract class Action {
 		} else if (Utils.includes(text, "Phillipsburg") && Utils.includes(text, "calendar")) {
 			Main.say("The school calendar portion of this program is not complete");
 		} else if (Utils.includes(text, "calendar")) {
-			Main.say("The calendar portion of this program is not complete");
+			calUI.startInteractiveSpeech();
 		} else if (Utils.includes(text, "time")) {
 			time();
 		} else if (Utils.includes(text, "alarm")) {
