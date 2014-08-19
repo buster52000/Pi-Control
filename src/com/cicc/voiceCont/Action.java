@@ -195,7 +195,8 @@ public abstract class Action {
 	}
 	
 	private String requestEmail() {
-		return null;
+		Speak.say("Please type your email address");
+		return JOptionPane.showInputDialog("Please type your email address");
 	}
 
 	public void time() {

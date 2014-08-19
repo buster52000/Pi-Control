@@ -36,10 +36,10 @@ public class OAuthHandler {
 	public OAuthHandler(String email) throws Exception {
 		loadTokenFile();
 		this.email = email;
-		if(email == null || email.length() == 0)
+		if (email == null || email.length() == 0)
 			throw new NullPointerException("Email param cannot be null or empty");
 		else if (!email.contains("@"))
-			throw new Exception("\""+email+"\" is not an email address");
+			throw new Exception("\"" + email + "\" is not an email address");
 	}
 
 	public Credential getCredentials() throws IOException, InterruptedException {
@@ -108,7 +108,13 @@ public class OAuthHandler {
 		response = response.replaceAll(" ", "");
 		if (response != null && !response.startsWith("{\"error\"")) {
 			accessToken = Utils.substringBetween(response, "\"access_token\":\"", "\"");
-			expireTime = System.currentTimeMillis() + (Long.parseLong(Utils.substringBetween(response, "\"expires_in\":", "}")) * 1000);
+			System.out.println("accessToken = " + accessToken);
+			System.out.println(response);
+			try {
+				expireTime = System.currentTimeMillis() + (Long.parseLong(Utils.substringBetween(response, "\"expires_in\":", "}")) * 1000);
+			} catch (NumberFormatException e) {
+				expireTime = System.currentTimeMillis() + (Long.parseLong(Utils.substringBetween(response, "\"expires_in\":", ",")) * 1000);
+			}
 			saveTokenFile();
 		}
 	}
