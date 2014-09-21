@@ -6,7 +6,7 @@ import org.bbelovic.weather.WeatherModel;
 import org.bbelovic.weather.YahooWeatherReader;
 
 import com.cicc.geoLoc.GeoLocation;
-import com.cicc.tts.Speak;
+import com.cicc.texttospeech.Speak;
 import com.smartechz.geoloc.GeoPlanetExplorer;
 
 public class Weather {
@@ -37,7 +37,6 @@ public class Weather {
 		String wForcast = "The weather forcast is, " + forcast.getCondition() + " with a high of " + high + " degrees, and a low of " + low + " degrees";
 		System.out.println(cWeather1 + " " + cWeather2);
 		System.out.println(wForcast);
-		// say("Hello Ryan Cicchiello");
 		ArrayList<String> cWeather = new ArrayList<String>();
 		cWeather.add(cWeather1);
 		cWeather.add(cWeather2);
@@ -46,17 +45,7 @@ public class Weather {
 	}
 
 	public static void main(String args[]) {
-		String zipCode = "08886";
-		if (args.length > 0 && args[0].length() == 5) {
-			zipCode = args[0];
-			zipCode = zipCode.replaceAll("\\d+", "");
-			if (zipCode.equals("")) {
-				zipCode = args[0];
-			} else {
-				zipCode = "08886";
-			}
-		}
-		Weather weather = new Weather(/*zipCode*/);
+		Weather weather = new Weather();
 		weather.start();
 	}
 

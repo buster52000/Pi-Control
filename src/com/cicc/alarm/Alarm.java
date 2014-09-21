@@ -2,7 +2,7 @@ package com.cicc.alarm;
 
 import java.io.File;
 
-public class Alarm {
+public class Alarm implements Cloneable {
 
 	private String toneFileName, alarmName;
 	private int [] alarmTime;
@@ -86,6 +86,11 @@ public class Alarm {
 	
 	public void setRepeat(int [] repeat) {
 		this.repeat = repeat;
+	}
+	
+	@Override
+	public Object clone() {
+		return new Alarm(alarmName, alarmTime, toneFileName, alarmID, task, alarmFile, repeat, mode);
 	}
 	
 }

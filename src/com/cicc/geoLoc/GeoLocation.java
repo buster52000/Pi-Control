@@ -12,8 +12,8 @@ import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
-import com.cicc.tts.Speak;
-import com.cicc.tts.Utils;
+import com.cicc.texttospeech.Speak;
+import com.cicc.voiceCont.Utils;
 import com.smartechz.geoloc.Geobytes;
 
 public class GeoLocation {

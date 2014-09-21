@@ -1,0 +1,299 @@
+{
+   "results" : [
+      {
+         "address_components" : [
+            {
+               "long_name" : "290",
+               "short_name" : "290",
+               "types" : [ "street_number" ]
+            },
+            {
+               "long_name" : "Hudson Street",
+               "short_name" : "Hudson St",
+               "types" : [ "route" ]
+            },
+            {
+               "long_name" : "Phillipsburg",
+               "short_name" : "Phillipsburg",
+               "types" : [ "locality", "political" ]
+            },
+            {
+               "long_name" : "Warren County",
+               "short_name" : "Warren County",
+               "types" : [ "administrative_area_level_2", "political" ]
+            },
+            {
+               "long_name" : "New Jersey",
+               "short_name" : "NJ",
+               "types" : [ "administrative_area_level_1", "political" ]
+            },
+            {
+               "long_name" : "United States",
+               "short_name" : "US",
+               "types" : [ "country", "political" ]
+            },
+            {
+               "long_name" : "08865",
+               "short_name" : "08865",
+               "types" : [ "postal_code" ]
+            }
+         ],
+         "formatted_address" : "290 Hudson Street, Phillipsburg, NJ 08865, USA",
+         "geometry" : {
+            "location" : {
+               "lat" : 40.693697,
+               "lng" : -75.19020499999999
+            },
+            "location_type" : "ROOFTOP",
+            "viewport" : {
+               "northeast" : {
+                  "lat" : 40.6950459802915,
+                  "lng" : -75.18885601970848
+               },
+               "southwest" : {
+                  "lat" : 40.6923480197085,
+                  "lng" : -75.19155398029149
+               }
+            }
+         },
+         "types" : [ "street_address" ]
+      },
+      {
+         "address_components" : [
+            {
+               "long_name" : "Phillipsburg",
+               "short_name" : "Phillipsburg",
+               "types" : [ "locality", "political" ]
+            },
+            {
+               "long_name" : "Warren County",
+               "short_name" : "Warren County",
+               "types" : [ "administrative_area_level_2", "political" ]
+            },
+            {
+               "long_name" : "New Jersey",
+               "short_name" : "NJ",
+               "types" : [ "administrative_area_level_1", "political" ]
+            },
+            {
+               "long_name" : "United States",
+               "short_name" : "US",
+               "types" : [ "country", "political" ]
+            }
+         ],
+         "formatted_address" : "Phillipsburg, NJ, USA",
+         "geometry" : {
+            "bounds" : {
+               "northeast" : {
+                  "lat" : 40.7064979,
+                  "lng" : -75.16020890000001
+               },
+               "southwest" : {
+                  "lat" : 40.66617189999999,
+                  "lng" : -75.2039209
+               }
+            },
+            "location" : {
+               "lat" : 40.69370989999999,
+               "lng" : -75.1901761
+            },
+            "location_type" : "APPROXIMATE",
+            "viewport" : {
+               "northeast" : {
+                  "lat" : 40.7064979,
+                  "lng" : -75.16020890000001
+               },
+               "southwest" : {
+                  "lat" : 40.66617189999999,
+                  "lng" : -75.2039209
+               }
+            }
+         },
+         "types" : [ "locality", "political" ]
+      },
+      {
+         "address_components" : [
+            {
+               "long_name" : "08865",
+               "short_name" : "08865",
+               "types" : [ "postal_code" ]
+            },
+            {
+               "long_name" : "Phillipsburg",
+               "short_name" : "Phillipsburg",
+               "types" : [ "locality", "political" ]
+            },
+            {
+               "long_name" : "New Jersey",
+               "short_name" : "NJ",
+               "types" : [ "administrative_area_level_1", "political" ]
+            },
+            {
+               "long_name" : "United States",
+               "short_name" : "US",
+               "types" : [ "country", "political" ]
+            }
+         ],
+         "formatted_address" : "Phillipsburg, NJ 08865, USA",
+         "geometry" : {
+            "bounds" : {
+               "northeast" : {
+                  "lat" : 40.79016000000001,
+                  "lng" : -75.060121
+               },
+               "southwest" : {
+                  "lat" : 40.59177589999999,
+                  "lng" : -75.2039209
+               }
+            },
+            "location" : {
+               "lat" : 40.728439,
+               "lng" : -75.1662121
+            },
+            "location_type" : "APPROXIMATE",
+            "viewport" : {
+               "northeast" : {
+                  "lat" : 40.79016000000001,
+                  "lng" : -75.060121
+               },
+               "southwest" : {
+                  "lat" : 40.59177589999999,
+                  "lng" : -75.2039209
+               }
+            }
+         },
+         "postcode_localities" : [ "Alpha", "Phillipsburg" ],
+         "types" : [ "postal_code" ]
+      },
+      {
+         "address_components" : [
+            {
+               "long_name" : "Warren County",
+               "short_name" : "Warren County",
+               "types" : [ "administrative_area_level_2", "political" ]
+            },
+            {
+               "long_name" : "New Jersey",
+               "short_name" : "NJ",
+               "types" : [ "administrative_area_level_1", "political" ]
+            },
+            {
+               "long_name" : "United States",
+               "short_name" : "US",
+               "types" : [ "country", "political" ]
+            }
+         ],
+         "formatted_address" : "Warren County, NJ, USA",
+         "geometry" : {
+            "bounds" : {
+               "northeast" : {
+                  "lat" : 41.0945199,
+                  "lng" : -74.7678739
+               },
+               "southwest" : {
+                  "lat" : 40.59177589999999,
+                  "lng" : -75.2039209
+               }
+            },
+            "location" : {
+               "lat" : 40.8841854,
+               "lng" : -74.92087719999999
+            },
+            "location_type" : "APPROXIMATE",
+            "viewport" : {
+               "northeast" : {
+                  "lat" : 41.0945199,
+                  "lng" : -74.7678739
+               },
+               "southwest" : {
+                  "lat" : 40.59177589999999,
+                  "lng" : -75.2039209
+               }
+            }
+         },
+         "types" : [ "administrative_area_level_2", "political" ]
+      },
+      {
+         "address_components" : [
+            {
+               "long_name" : "New Jersey",
+               "short_name" : "NJ",
+               "types" : [ "administrative_area_level_1", "political" ]
+            },
+            {
+               "long_name" : "United States",
+               "short_name" : "US",
+               "types" : [ "country", "political" ]
+            }
+         ],
+         "formatted_address" : "New Jersey, USA",
+         "geometry" : {
+            "bounds" : {
+               "northeast" : {
+                  "lat" : 41.357423,
+                  "lng" : -73.9024391
+               },
+               "southwest" : {
+                  "lat" : 38.9286252,
+                  "lng" : -75.5597921
+               }
+            },
+            "location" : {
+               "lat" : 40.0583238,
+               "lng" : -74.4056612
+            },
+            "location_type" : "APPROXIMATE",
+            "viewport" : {
+               "northeast" : {
+                  "lat" : 41.357423,
+                  "lng" : -73.9024391
+               },
+               "southwest" : {
+                  "lat" : 38.9286252,
+                  "lng" : -75.5597921
+               }
+            }
+         },
+         "types" : [ "administrative_area_level_1", "political" ]
+      },
+      {
+         "address_components" : [
+            {
+               "long_name" : "United States",
+               "short_name" : "US",
+               "types" : [ "country", "political" ]
+            }
+         ],
+         "formatted_address" : "United States",
+         "geometry" : {
+            "bounds" : {
+               "northeast" : {
+                  "lat" : 71.389888,
+                  "lng" : -66.94976079999999
+               },
+               "southwest" : {
+                  "lat" : 18.9110642,
+                  "lng" : 172.4458955
+               }
+            },
+            "location" : {
+               "lat" : 37.09024,
+               "lng" : -95.712891
+            },
+            "location_type" : "APPROXIMATE",
+            "viewport" : {
+               "northeast" : {
+                  "lat" : 49.38,
+                  "lng" : -66.94
+               },
+               "southwest" : {
+                  "lat" : 25.82,
+                  "lng" : -124.39
+               }
+            }
+         },
+         "types" : [ "country", "political" ]
+      }
+   ],
+   "status" : "OK"
+}

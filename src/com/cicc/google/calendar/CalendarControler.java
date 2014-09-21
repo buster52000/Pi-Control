@@ -46,27 +46,31 @@ public class CalendarControler {
 			cIDs.add(ent.getId());
 		return cIDs;
 	}
-	
+
 	public ArrayList<String[]> getCalendarSummaries() throws IOException, InterruptedException {
 		if (auth.getExpiresInSeconds() < 5)
 			reloadCredentials();
 		CalendarList cList = client.calendarList().list().execute();
 		ArrayList<String[]> cSum = new ArrayList<String[]>();
 		for (CalendarListEntry ent : cList.getItems())
-			cSum.add(new String[] {ent.getSummary(), ent.getId()});
+			cSum.add(new String[] { ent.getSummary(), ent.getId() });
 		return cSum;
 	}
-	
+
 	public ArrayList<String[]> getCalendarNames() throws IOException, InterruptedException {
 		if (auth.getExpiresInSeconds() < 5)
 			reloadCredentials();
 		CalendarList cList = client.calendarList().list().execute();
 		ArrayList<String[]> cNames = new ArrayList<String[]>();
-		for (CalendarListEntry ent : cList.getItems())
-			cNames.add(new String[] {ent.getDescription(), ent.getId()});
+		for (CalendarListEntry ent : cList.getItems()) {
+			if (ent.getSummaryOverride() != null)
+				cNames.add(new String[] { ent.getSummaryOverride(), ent.getId() });
+			else
+				cNames.add(new String[] { ent.getSummary(), ent.getId() });
+		}
 		return cNames;
 	}
-
+	
 	public ArrayList<Event> getEvents(String calID) throws IOException, InterruptedException {
 		if (auth.getExpiresInSeconds() < 5)
 			reloadCredentials();

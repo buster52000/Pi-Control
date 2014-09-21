@@ -13,27 +13,23 @@ import java.util.Timer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.cicc.tts.Speak;
-import com.cicc.tts.Utils;
+import com.cicc.texttospeech.Speak;
 import com.cicc.voiceCont.AudioPlayer;
+import com.cicc.voiceCont.Utils;
 import com.cicc.weather.Weather;
 
 public abstract class AlarmController {
 
 	public static void main(String args[]) {
 		AlarmController alm = new AlarmController() {
-			
+
 			@Override
 			public ArrayList<String> speechRec() {
 				ArrayList<String> arr = new ArrayList<String>();
 				arr.add("1");
 				return arr;
 			}
-			
-			@Override
-			public void sayTime() {
-				System.out.println("Time");
-			}
+
 		};
 		alm.alarmInfo();
 	}
@@ -53,11 +49,13 @@ public abstract class AlarmController {
 
 	private ArrayList<Alarm> alarms;
 	private Timer timer;
+	private ArrayList<Alarm> soundingAlarms;
 
 	public AlarmController() {
 		alarms = new ArrayList<Alarm>();
 		timer = new Timer();
 		checkAlarmFiles();
+		soundingAlarms = new ArrayList<Alarm>();
 	}
 
 	public void startInteractiveSpeech() {
@@ -423,6 +421,18 @@ public abstract class AlarmController {
 		scheduelAlarm(alm);
 	}
 
+	public void stopAlarms() {
+		for (Alarm alm : soundingAlarms) {
+			alm.getTimerTask().cancel();
+			soundingAlarms.remove(alm);
+			if (alm.getMode() == Alarm.ALM_MODE_INFO) {
+				Utils.sayTime(true);
+				Weather weather = new Weather();
+				weather.start();
+			}
+		}
+	}
+
 	private void soundAlarm(int id) {
 		Alarm alm = null;
 		for (Alarm a : alarms)
@@ -435,11 +445,31 @@ public abstract class AlarmController {
 				e.printStackTrace();
 			}
 		int almMode = alm.getMode();
+		final String toneFileName = alm.getToneFileName();
 		if (almMode == Alarm.ALM_MODE_INFO) {
-			AudioPlayer.playSound(alm.getToneFileName(), true);
-			sayTime();
-			Weather weather = new Weather();
-			weather.start();
+			CustomTimerTask task = new CustomTimerTask(alm.getAlarmID()) {
+
+				private int callNum = 0;
+
+				@Override
+				public void run() {
+					callNum++;
+					AudioPlayer.playSound(toneFileName, true);
+					if (callNum < 3) {
+						Utils.sayTime(false);
+						timer.schedule(this, 15 * 60 * 1000);
+					} else {
+						soundingAlarms.remove(this);
+						Utils.sayTime(true);
+						Weather weather = new Weather();
+						weather.start();
+					}
+				}
+			};
+			Alarm newAlm = (Alarm) alm.clone();
+			newAlm.setTimerTask(task);
+			soundingAlarms.add(newAlm);
+			timer.schedule(task, 0);
 		} else if (almMode == Alarm.ALM_MODE_SILENT) {
 			System.out.println("Silent Alarm");
 		} else if (almMode == Alarm.ALM_MODE_ONCE) {
@@ -886,8 +916,6 @@ public abstract class AlarmController {
 		}
 		return alarm;
 	}
-
-	public abstract void sayTime();
 
 	public abstract ArrayList<String> speechRec();
 
