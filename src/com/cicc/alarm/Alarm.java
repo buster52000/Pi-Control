@@ -16,6 +16,7 @@ public class Alarm implements Cloneable {
 	public static final int ALM_MODE_CONT = 1;
 	public static final int ALM_MODE_ONCE = 2;
 	public static final int ALM_MODE_INFO = 3;
+	public static final int ALM_MODE_MORNING = 4;
 	
 	public Alarm(String alarmName, int [] alarmTime, String toneFileName, int alarmID, CustomTimerTask task, File file, int [] repeat, int mode) {
 		this.alarmName = alarmName;

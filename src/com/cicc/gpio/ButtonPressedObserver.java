@@ -52,29 +52,32 @@ public class ButtonPressedObserver {
 	private volatile boolean isRunning = false;
 	private final List<ButtonListener> buttonListeners = new LinkedList<ButtonListener>();
 	private final ILCD lcd;
-	private final long [] buttonDownTimes = new long[Button.values().length];
-	
+	private final long[] buttonDownTimes = new long[Button.values().length];
+
 	private class ButtonChecker implements Runnable {
 		@Override
 		public void run() {
 			while (isRunning) {
 				try {
-					for (Button button : Button.values()) {
-						if (button.isButtonPressed(lcd.buttonsPressedBitmask())) {
-							if (buttonDownTimes[button.getPin()] != 0) {
-								continue;
+						if (lcd instanceof LCDController)
+							((LCDController) lcd).aquireLock();
+						for (Button button : Button.values()) {
+							if (button.isButtonPressed(lcd.buttonsPressedBitmask())) {
+								if (buttonDownTimes[button.getPin()] != 0) {
+									continue;
+								}
+								buttonDownTimes[button.getPin()] = System.currentTimeMillis();
+							} else if (buttonDownTimes[button.getPin()] != 0) {
+								if ((System.currentTimeMillis() - buttonDownTimes[button.getPin()]) > 15) {
+									fireNotification(button);
+								}
+								buttonDownTimes[button.getPin()] = 0;
 							}
-							buttonDownTimes[button.getPin()] = System.currentTimeMillis();
-						} else if (buttonDownTimes[button.getPin()] != 0) {
-							if ((System.currentTimeMillis() - buttonDownTimes[button.getPin()]) > 15) {
-								fireNotification(button);
-							}
-							buttonDownTimes[button.getPin()] = 0;
 						}
-					}
+						if (lcd instanceof LCDController)
+							((LCDController) lcd).releaseLock();
 				} catch (IOException e) {
-					Logger.getLogger("se.hirt.pi.adafruit").log(Level.SEVERE,
-							"Could not get buttons bitmask!", e);
+					Logger.getLogger("se.hirt.pi.adafruit").log(Level.SEVERE, "Could not get buttons bitmask!", e);
 				}
 				sleep(15);
 				Thread.yield();
@@ -85,16 +88,14 @@ public class ButtonPressedObserver {
 			try {
 				Thread.sleep(time);
 			} catch (InterruptedException e) {
-				Logger.getLogger("se.hirt.pi.adafruit").log(Level.SEVERE,
-						"Could not get buttons bitmask!", e);
-			}			
+				Logger.getLogger("se.hirt.pi.adafruit").log(Level.SEVERE, "Could not get buttons bitmask!", e);
+			}
 		}
 
 		private void fireNotification(Button trackedButton) {
 			ButtonListener[] listeners;
 			synchronized (buttonListeners) {
-				listeners = buttonListeners
-						.toArray(new ButtonListener[buttonListeners.size()]);
+				listeners = buttonListeners.toArray(new ButtonListener[buttonListeners.size()]);
 			}
 			for (ButtonListener l : listeners) {
 				l.onButtonPressed(trackedButton);

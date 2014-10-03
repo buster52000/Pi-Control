@@ -56,22 +56,32 @@ public class Speak {
 			System.err.println("Unable to retrieve tts mp3 from google");
 			return;
 		}
-
-		try {
-			ArrayList<Player> players = new ArrayList<Player>();
-			for (File file : files)
-				players.add(new Player(new FileInputStream(file)));
-			for (Player pl : players) {
-				pl.play();
+		if (System.getProperty("os.name").toLowerCase().contains("linux")) {
+			for (File file : files) {
+				Runtime rt = Runtime.getRuntime();
+				try {
+					Process pr = rt.exec("mpg123 " + file.getName());
+					pr.waitFor();
+				} catch (IOException | InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
-			for (Player pl : players)
-				pl.close();
-			for (File file : files)
-				file.delete();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (JavaLayerException e) {
-			e.printStackTrace();
+		} else {
+			try {
+				ArrayList<Player> players = new ArrayList<Player>();
+				for (File file : files)
+					players.add(new Player(new FileInputStream(file)));
+				for (Player pl : players)
+					pl.play();
+				for (Player pl : players)
+					pl.close();
+				for (File file : files)
+					file.delete();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (JavaLayerException e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
@@ -84,7 +94,7 @@ public class Speak {
 			return;
 		}
 
-		ArrayList<File> files = new ArrayList<File>();
+		// ArrayList<File> files = new ArrayList<File>();
 		ArrayList<String> toSay = new ArrayList<String>();
 		if (text.length() > 100) {
 			int numOfReqs = (int) Math.ceil(text.length() / 100.0);
@@ -104,46 +114,47 @@ public class Speak {
 		} else {
 			toSay.add(text);
 		}
-		try {
-			for (int i = 0; i < toSay.size(); i++) {
-				String strUrl = TTS_URL + URLEncoder.encode(toSay.get(i), "UTF-8");
-				URL url = new URL(strUrl);
-				files.add(download(url, i));
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		if (files == null || files.size() == 0 || files.contains(null)) {
-			System.err.println("Unable to retrieve tts mp3 from google");
-			return;
-		}
-
-		try {
-			ArrayList<Player> players = new ArrayList<Player>();
-			// Runtime rt = Runtime.getRuntime();
-			for (File file : files) {
-				// try {
-				// Process pr = rt.exec("mpg123 "+file.getName());
-				// pr.waitFor();
-				// } catch (IOException | InterruptedException e) {
-				// e.printStackTrace();
-				// }
-				// }
-				players.add(new Player(new FileInputStream(file)));
-			}
-			for (Player pl : players) {
-				pl.play();
-			}
-			for (Player pl : players)
-				pl.close();
-			for (File file : files)
-				file.delete();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (JavaLayerException e) {
-			e.printStackTrace();
-		}
+		say(toSay);
+		// try {
+		// for (int i = 0; i < toSay.size(); i++) {
+		// String strUrl = TTS_URL + URLEncoder.encode(toSay.get(i), "UTF-8");
+		// URL url = new URL(strUrl);
+		// files.add(download(url, i));
+		// }
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+		//
+		// if (files == null || files.size() == 0 || files.contains(null)) {
+		// System.err.println("Unable to retrieve tts mp3 from google");
+		// return;
+		// }
+		//
+		// try {
+		// ArrayList<Player> players = new ArrayList<Player>();
+		// for (File file : files) {
+		// Runtime rt = Runtime.getRuntime();
+		// try {
+		// Process pr = rt.exec("mpg123 "+file.getName());
+		// pr.waitFor();
+		// } catch (IOException | InterruptedException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// players.add(new Player(new FileInputStream(file)));
+		// }
+		// for (Player pl : players) {
+		// pl.play();
+		// }
+		// for (Player pl : players)
+		// pl.close();
+		// for (File file : files)
+		// file.delete();
+		// } catch (FileNotFoundException e) {
+		// e.printStackTrace();
+		// } catch (JavaLayerException e) {
+		// e.printStackTrace();
+		// }
 
 	}
 

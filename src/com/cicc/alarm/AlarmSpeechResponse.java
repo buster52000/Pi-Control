@@ -46,7 +46,7 @@ public class AlarmSpeechResponse extends SpeechResponce {
 			if (Utils.speechMatchesParams(text, paramArrays[i])) {
 				switch (i) {
 				case 0:
-					Speak.say("Unable to stop alarms");
+					alarm.stopAlarms();
 					break;
 				case 1:
 					alarm.startInteractiveSpeech();

@@ -45,7 +45,7 @@ public class GoogleResponse {
      *
      * @param response The response
      */
-    protected void setResponse(String response) {
+    public void setResponse(String response) {
         this.response = response;
     }
 

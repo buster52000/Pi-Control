@@ -95,7 +95,7 @@ public class MockupLCD implements ILCD {
 	}
 
 	public void write(String s) {
-		char[] buffer = cursorRow == 0 ? FIRST_ROW : SECOND_ROW;
+		char[] buffer = (cursorRow == 0 ? FIRST_ROW : SECOND_ROW);
 		for (int i = 0; i < s.length() && cursorColumn < DDRAM_SIZE; i++) {
 			buffer[cursorColumn++] = s.charAt(i);
 		}

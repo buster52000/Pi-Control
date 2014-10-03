@@ -9,7 +9,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.sound.sampled.AudioFileFormat;
+import javax.swing.JOptionPane;
 
+import com.cicc.gpio.Color;
+import com.cicc.gpio.LCDController;
 import com.cicc.texttospeech.Speak;
 import com.darkprograms.speech.microphone.MicrophoneAnalyzer;
 import com.darkprograms.speech.recognizer.GoogleResponse;
@@ -30,10 +33,22 @@ public class Main {
 	private Action action;
 	public final String API_KEY;
 	public final String WOLFRAM_ID;
-	public static final int SAMPLE_RATE = 16000;
 	private boolean loaded = false;
+	private final boolean testMode = false;
+	
+	public static final int SAMPLE_RATE = 16000;
+	public static LCDController lcd = null;
 
 	public Main() throws Exception {
+		lcd = new LCDController(LCDController.LCD_MODE_WRITE);
+		lcd.aquireLock();
+		lcd.clear();
+		lcd.setBacklight(Color.RED);
+		lcd.setCursorPosition(0, 5);
+		lcd.write("System");
+		lcd.setCursorPosition(1, 4);
+		lcd.write("Starting");
+		lcd.releaseLock();
 		Speak.say("System Starting");
 		String[] IDs = readIDs();
 		API_KEY = IDs[0];
@@ -48,84 +63,116 @@ public class Main {
 		};
 		recognizer = new Recognizer(API_KEY);
 		sndMngr = new SoundManager();
+		lcd.aquireLock();
+		lcd.clear();
+		lcd.setCursorPosition(0, 5);
+		lcd.write("System");
+		lcd.setCursorPosition(1, 4);
+		lcd.write("Started ");
+		lcd.releaseLock();
 		Speak.say("System Started");
+		lcd.aquireLock();
+		lcd.clear();
+		lcd.setMode(LCDController.LCD_MODE_MAIN);
+		lcd.releaseLock();
 		loaded = true;
 	}
 
 	public void initMic() {
-		microphone = new MicrophoneAnalyzer(AudioFileFormat.Type.WAVE) {
+		if (!testMode) {
+			microphone = new MicrophoneAnalyzer(AudioFileFormat.Type.WAVE) {
 
-			@Override
-			public void soundHeard(float lvl) {
-				if (lvl > 0.1 && !checking && (!responding || action.isOther()) && loaded) {
-					System.out.println("SoundHeard lvl - " + lvl);
-					if (started) {
-						micTimer.cancel();
-						task = new TimerTask() {
+				@Override
+				public void soundHeard(float lvl) {
+					if (lvl > 0.1 && !checking && (!responding || action.isOther()) && loaded) {
+						System.out.println("SoundHeard lvl - " + lvl);
+						if (started) {
+							micTimer.cancel();
+							task = new TimerTask() {
 
-							@Override
-							public void run() {
-								sndMngr.playStopListening();
-								try {
-									stop();
-								} catch (IOException | InterruptedException e) {
-									Speak.say("Error");
-									e.printStackTrace();
+								@Override
+								public void run() {
+									sndMngr.playStopListening();
+									try {
+										stop();
+									} catch (IOException | InterruptedException e) {
+										Speak.say("Error");
+										e.printStackTrace();
+									}
 								}
-							}
-						};
-						micTimer = new Timer(true);
-						micTimer.schedule(task, 1000);
-					} else {
-						checking = true;
-						try {
-							File audioFile = new File(audioFileName);
-							if (audioFile.exists())
-								audioFile.delete();
-							microphone.captureAudioToFile(audioFileName);
-						} catch (Exception e1) {
-							e1.printStackTrace();
-							Speak.say("Unable To Capture Audio to file");
-						}
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						if (checking) {
-							microphone.close();
-							microphone.open();
-							checking = false;
-							GoogleResponse gr = null;
+							};
+							micTimer = new Timer(true);
+							micTimer.schedule(task, 1000);
+						} else {
+							checking = true;
 							try {
-								System.out.println("Pre Recognize");
 								File audioFile = new File(audioFileName);
-								File flacFile = new File(flacFileName);
-								if (flacFile.exists())
-									flacFile.delete();
-								Utils.convertWavToFlac(audioFile, flacFile, SAMPLE_RATE);
-								gr = recognizer.getRecognizedDataForFlac(flacFileName, 5, SAMPLE_RATE);
+								if (audioFile.exists())
+									audioFile.delete();
+								microphone.captureAudioToFile(audioFileName);
 							} catch (Exception e1) {
 								e1.printStackTrace();
-								Speak.say("Unable to Recognize Sound");
+								Speak.say("Unable To Capture Audio to file");
 							}
-							System.out.println("Post Recognize");
-							if (gr != null) {
-								ArrayList<String> response = gr.getAllPossibleResponses();
-								System.out.println("Responce - " + response.toString());
-								for (String str : response)
-									if (str != null && (Utils.includes(str, "computer") || Utils.includes(str, "pi") || Utils.includes(str, "Jarvis"))) {
-										if (!started)
-											startListening();
-										break;
-									}
-							} else
-								System.out.println("Responce - null");
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							if (checking) {
+								microphone.close();
+								microphone.open();
+								checking = false;
+								GoogleResponse gr = null;
+								try {
+									System.out.println("Pre Recognize");
+									File audioFile = new File(audioFileName);
+									File flacFile = new File(flacFileName);
+									if (flacFile.exists())
+										flacFile.delete();
+									Utils.convertWavToFlac(audioFile, flacFile, SAMPLE_RATE);
+									gr = recognizer.getRecognizedDataForFlac(flacFileName, 5, SAMPLE_RATE);
+								} catch (Exception e1) {
+									e1.printStackTrace();
+									Speak.say("Unable to Recognize Sound");
+								}
+								System.out.println("Post Recognize");
+								if (gr != null) {
+									ArrayList<String> response = gr.getAllPossibleResponses();
+									System.out.println("Responce - " + response.toString());
+									for (String str : response)
+										if (str != null && (Utils.includes(str, "computer") || Utils.includes(str, "pi") || Utils.includes(str, "Jarvis"))) {
+											if (!started)
+												startListening();
+											break;
+										}
+								} else
+									System.out.println("Responce - null");
+							}
 						}
 					}
 				}
-			}
-		};
+			};
+		} else {
+			Thread testThread = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					while (true) {
+						if (loaded && !action.isOther()) {
+							startListening();
+						}
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}, "TestMode");
+			testThread.start();
+		}
+
 	}
 
 	public void startListening() {
@@ -133,6 +180,20 @@ public class Main {
 			return;
 		started = true;
 		checking = false;
+		lcd.aquireLock();
+		lcd.setMode(LCDController.LCD_MODE_WRITE);
+		lcd.clear();
+		lcd.setCursorPosition(0, 2);
+		lcd.write("Listening...");
+		lcd.releaseLock();
+		if (testMode) {
+			try {
+				stop();
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+			return;
+		}
 		microphone.close();
 		microphone.open();
 		try {
@@ -166,23 +227,34 @@ public class Main {
 	public void stop() throws IOException, InterruptedException {
 		if (responding && !action.isOther())
 			return;
-		System.out.println("Stopped");
+		GoogleResponse gr = null;
 		responding = true;
 		started = false;
-		microphone.close();
-		microphone.open();
-		System.out.println("Process");
-		GoogleResponse gr = null;
-		try {
-			File flacFile = new File(flacFileName);
-			File audioFile = new File(audioFileName);
-			Utils.convertWavToFlac(audioFile, flacFile, SAMPLE_RATE);
-			gr = recognizer.getRecognizedDataForFlac(flacFileName, 5, SAMPLE_RATE);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-			Speak.say("Unable to Recognize Sound");
+		if (!testMode) {
+			System.out.println("Stopped");
+			microphone.close();
+			microphone.open();
+			System.out.println("Process");
+			lcd.aquireLock();
+			lcd.clear();
+			lcd.setCursorPosition(0, 1);
+			lcd.write("Processing....");
+			lcd.releaseLock();
+			try {
+				File flacFile = new File(flacFileName);
+				File audioFile = new File(audioFileName);
+				Utils.convertWavToFlac(audioFile, flacFile, SAMPLE_RATE);
+				gr = recognizer.getRecognizedDataForFlac(flacFileName, 5, SAMPLE_RATE);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+				Speak.say("Unable to Recognize Sound");
+			}
+			System.out.println("Complete");
+			lcd.setMode(LCDController.LCD_MODE_MAIN);
+		} else {
+			gr = new GoogleResponse();
+			gr.setResponse(JOptionPane.showInputDialog("Test mode - Please type text"));
 		}
-		System.out.println("Complete");
 		if (gr != null) {
 			ArrayList<String> response = gr.getAllPossibleResponses();
 			System.out.println(response);

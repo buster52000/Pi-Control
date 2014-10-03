@@ -38,6 +38,8 @@ public abstract class AlarmController {
 	public static final int ALARM_FILE_LENGTH = 5;
 	public static final int TOD_AM = 0;
 	public static final int TOD_PM = 1;
+	public static final String[] toneFileNames = { "goodmorning.wav", "alarm1.wav" };
+	public static final String[] toneFileDescriptions = { "Goodmorning", "Upbeat Alarm" };
 
 	// Alarm file format
 	// FileName: ID.alm
@@ -45,6 +47,7 @@ public abstract class AlarmController {
 	// AlmName:name
 	// AlmTime:HH-MM
 	// Repeat:1-2-3-4-5-6-7
+	// AlmSoundFile:fileName
 	// AlmMode:int
 
 	private ArrayList<Alarm> alarms;
@@ -164,7 +167,7 @@ public abstract class AlarmController {
 		if (repeatDays.length != 0) {
 			String days = "";
 			for (int i : repeatDays)
-				days += (dayOfWeekToText(i) + ", ");
+				days += (AlarmUtils.dayOfWeekToText(i) + ", ");
 			toSay.add("repeating every " + days);
 		} else
 			toSay.add("repeating never");
@@ -195,6 +198,7 @@ public abstract class AlarmController {
 				toSay.add("Rename,");
 				toSay.add("Change Time,");
 				toSay.add("Change Repeat,");
+				toSay.add("Change alarm sound");
 				toSay.add("and Change Mode");
 				Speak.say(toSay);
 				ArrayList<String> saidArr = speechRec();
@@ -240,6 +244,9 @@ public abstract class AlarmController {
 							for (int i = 0; i < repeat.length; i++)
 								repeat[i] = repeatDays.get(i);
 							alarm.setRepeat(repeat);
+						} else if (lcStr.contains("sound")) {
+							String soundFileName = requestSoundFile();
+							alarm.setToneFileName(soundFileName);
 						} else
 							valid = false;
 						if (valid) {
@@ -395,11 +402,12 @@ public abstract class AlarmController {
 		String almName = requestName();
 		if (almName == null)
 			return;
+		String toneFileName = requestSoundFile();
 		Speak.say("alarm schedueled for " + hour + ":" + min + " " + (timeOfDay == TOD_AM ? "a.m." : "p.m."));
 		if (repeatDays.size() != 0) {
 			String days = "";
 			for (int i : repeatDays)
-				days += (dayOfWeekToText(i) + ", ");
+				days += (AlarmUtils.dayOfWeekToText(i) + ", ");
 			Speak.say("repeating every" + days);
 		}
 		int[] alarmTime = new int[2];
@@ -408,7 +416,6 @@ public abstract class AlarmController {
 		else
 			alarmTime[0] = hour == 12 ? 12 : hour + 12;
 		alarmTime[1] = min;
-		String toneFileName = "alarm.wav";
 		int almID = 1;
 		while (idInUse(almID))
 			almID++;
@@ -422,13 +429,16 @@ public abstract class AlarmController {
 	}
 
 	public void stopAlarms() {
+		if(soundingAlarms.size() > 0)
+			Speak.say("Stoping alarms");
 		for (Alarm alm : soundingAlarms) {
 			alm.getTimerTask().cancel();
 			soundingAlarms.remove(alm);
-			if (alm.getMode() == Alarm.ALM_MODE_INFO) {
+			if (alm.getMode() == Alarm.ALM_MODE_MORNING) {
 				Utils.sayTime(true);
 				Weather weather = new Weather();
 				weather.start();
+				AlarmUtils.saySchoolDay();
 			}
 		}
 	}
@@ -446,7 +456,7 @@ public abstract class AlarmController {
 			}
 		int almMode = alm.getMode();
 		final String toneFileName = alm.getToneFileName();
-		if (almMode == Alarm.ALM_MODE_INFO) {
+		if (almMode == Alarm.ALM_MODE_MORNING) {
 			CustomTimerTask task = new CustomTimerTask(alm.getAlarmID()) {
 
 				private int callNum = 0;
@@ -470,6 +480,11 @@ public abstract class AlarmController {
 			newAlm.setTimerTask(task);
 			soundingAlarms.add(newAlm);
 			timer.schedule(task, 0);
+		} else if (almMode == Alarm.ALM_MODE_INFO) {
+			AudioPlayer.playSound(alm.getToneFileName(), true);
+			Utils.sayTime(true);
+			Weather weather = new Weather();
+			weather.start();
 		} else if (almMode == Alarm.ALM_MODE_SILENT) {
 			System.out.println("Silent Alarm");
 		} else if (almMode == Alarm.ALM_MODE_ONCE) {
@@ -482,43 +497,6 @@ public abstract class AlarmController {
 			removeAlarmFile(alm);
 	}
 
-	private String dayOfWeekToText(int i) {
-		if (i == Calendar.SUNDAY)
-			return "Sunday";
-		else if (i == Calendar.MONDAY)
-			return "Monday";
-		else if (i == Calendar.TUESDAY)
-			return "Tuesday";
-		else if (i == Calendar.WEDNESDAY)
-			return "Wednesday";
-		else if (i == Calendar.THURSDAY)
-			return "Thursday";
-		else if (i == Calendar.FRIDAY)
-			return "Friday";
-		else if (i == Calendar.SATURDAY)
-			return "Saturday";
-		return null;
-	}
-
-	private int parseDayOfWeek(String strDay) {
-		strDay = strDay.replaceAll(" ", "");
-		if (strDay.equalsIgnoreCase("monday"))
-			return Calendar.MONDAY;
-		else if (strDay.equalsIgnoreCase("tuesday"))
-			return Calendar.TUESDAY;
-		else if (strDay.equalsIgnoreCase("wednesday"))
-			return Calendar.WEDNESDAY;
-		else if (strDay.equalsIgnoreCase("thursday"))
-			return Calendar.THURSDAY;
-		else if (strDay.equalsIgnoreCase("friday"))
-			return Calendar.FRIDAY;
-		else if (strDay.equalsIgnoreCase("saturday"))
-			return Calendar.SATURDAY;
-		else if (strDay.equalsIgnoreCase("sunday"))
-			return Calendar.SUNDAY;
-		else
-			return 0;
-	}
 
 	private boolean idInUse(int id) {
 		for (Alarm a : alarms)
@@ -629,7 +607,7 @@ public abstract class AlarmController {
 						String[] splitSaid = said.split(" ");
 						ArrayList<Integer> notDay = new ArrayList<Integer>();
 						for (int i = 0; i < splitSaid.length; i++) {
-							if (parseDayOfWeek(splitSaid[i]) == 0)
+							if (AlarmUtils.parseDayOfWeek(splitSaid[i]) == 0)
 								notDay.add(i);
 						}
 						ArrayList<String> notDayWords = new ArrayList<String>();
@@ -678,9 +656,9 @@ public abstract class AlarmController {
 								done = true;
 							if (!done) {
 								if (allWords.contains("through") && allWords.size() == 3) {
-									if (allWords.get(1).equalsIgnoreCase("through") && parseDayOfWeek(allWords.get(0)) != 0 && parseDayOfWeek(allWords.get(2)) != 0) {
-										int day1 = parseDayOfWeek(allWords.get(0));
-										int day2 = parseDayOfWeek(allWords.get(2));
+									if (allWords.get(1).equalsIgnoreCase("through") && AlarmUtils.parseDayOfWeek(allWords.get(0)) != 0 && AlarmUtils.parseDayOfWeek(allWords.get(2)) != 0) {
+										int day1 = AlarmUtils.parseDayOfWeek(allWords.get(0));
+										int day2 = AlarmUtils.parseDayOfWeek(allWords.get(2));
 										if (day1 > day2) {
 											int i = day1;
 											while (i <= 7) {
@@ -717,8 +695,8 @@ public abstract class AlarmController {
 									validRepeat = true;
 								else {
 									for (String str : allWords)
-										if (parseDayOfWeek(str) != 0)
-											repeatDays.add(parseDayOfWeek(str));
+										if (AlarmUtils.parseDayOfWeek(str) != 0)
+											repeatDays.add(AlarmUtils.parseDayOfWeek(str));
 									if (repeatDays.size() > 0)
 										validRepeat = true;
 									else
@@ -726,8 +704,8 @@ public abstract class AlarmController {
 								}
 								if (exceptParam && !done)
 									for (String str : exceptArr)
-										if (parseDayOfWeek(str) != 0)
-											repeatDays.remove(parseDayOfWeek(str));
+										if (AlarmUtils.parseDayOfWeek(str) != 0)
+											repeatDays.remove(AlarmUtils.parseDayOfWeek(str));
 							}
 						}
 					}
@@ -796,6 +774,11 @@ public abstract class AlarmController {
 					} else if (lcStr.contains("info")) {
 						almMode = Alarm.ALM_MODE_INFO;
 						Speak.say("Info mode selected");
+						validMode = true;
+						break;
+					} else if (lcStr.contains("morning")) {
+						almMode = Alarm.ALM_MODE_MORNING;
+						Speak.say("Morning mode selected");
 						validMode = true;
 						break;
 					}
@@ -915,6 +898,82 @@ public abstract class AlarmController {
 			}
 		}
 		return alarm;
+	}
+
+	private String requestSoundFile() {
+		boolean validSound = false;
+		int timesAsked = 0;
+		String toneFileName = null;
+		while (!validSound) {
+			if (timesAsked >= 3) {
+				ArrayList<String> toSay = new ArrayList<String>();
+				toSay.add("I'm sorry, I can't seem to understand you.");
+				toSay.add("Please reposition the microphone and try again.");
+				Speak.say(toSay);
+				return null;
+			}
+			ArrayList<String> toSay = new ArrayList<String>();
+			toSay.add("Please say the numver of the corresponding sound or say preview then the number to hear the sound");
+			for (int i = 0; i < toneFileDescriptions.length; i++)
+				toSay.add((i + 1) + ". " + toneFileDescriptions[i]);
+			Speak.say(toSay);
+			ArrayList<String> saidArr = speechRec();
+			if (saidArr == null || saidArr.size() == 0 || saidArr.contains(null)) {
+				timesAsked++;
+				if (timesAsked < 3)
+					Speak.say("I'm sorry, I couldn't hear you. Could you repeat that?");
+			} else {
+				for (String str : saidArr) {
+					if (str.toLowerCase().contains("cancel")) {
+						Speak.say("Cancel");
+						return null;
+					}
+				}
+				boolean preview = false;
+				for (String str : saidArr) {
+					if (str.toLowerCase().contains("preview")) {
+						preview = true;
+						boolean previewed = false;
+						Pattern p = Pattern.compile("\\d+");
+						for (String s : saidArr) {
+							Matcher m = p.matcher(s);
+							if (m.find()) {
+								int soundId = Integer.parseInt(m.group()) - 1;
+								if (soundId > 0 && soundId < toneFileNames.length) {
+									AudioPlayer.playSound(toneFileNames[soundId], true);
+									previewed = true;
+									break;
+								}
+							}
+						}
+						if (!previewed) {
+							timesAsked++;
+							if (timesAsked < 3)
+								Speak.say("I'm sorry, but that was not one of the options");
+						}
+						break;
+					}
+				}
+				if (!preview) {
+					Pattern p = Pattern.compile("\\d+");
+					for (String s : saidArr) {
+						Matcher m = p.matcher(s);
+						if (m.find()) {
+							int soundId = Integer.parseInt(m.group()) - 1;
+							if (soundId > 0 && soundId < toneFileNames.length) {
+								toneFileName = toneFileNames[soundId];
+								validSound = true;
+								break;
+							}
+						}
+					}
+					timesAsked++;
+					if (!validSound && timesAsked < 3)
+						Speak.say("I'm sorry, That was an invalid request. Please try again");
+				}
+			}
+		}
+		return toneFileName;
 	}
 
 	public abstract ArrayList<String> speechRec();

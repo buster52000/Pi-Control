@@ -220,10 +220,10 @@ public class RealLCD implements ILCD {
 
 			// If a poll-worthy instruction was issued, reconfigure D7
 			// pin as input to indicate need for polling on next call.
-			if (value == LCD_CLEARDISPLAY || value == LCD_RETURNHOME) {
-				ddrB |= 0x10;
-				i2cDevice.write(MCP23017_IODIRB, (byte) ddrB);
-			}
+			// if (value == LCD_CLEARDISPLAY || value == LCD_RETURNHOME) {
+			ddrB |= 0x10;
+			i2cDevice.write(MCP23017_IODIRB, (byte) ddrB);
+			// }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

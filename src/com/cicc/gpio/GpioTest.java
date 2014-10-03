@@ -1,14 +1,6 @@
-package com.cicc.gpio.old;
+package com.cicc.gpio;
 
-import java.io.IOException;
 import java.util.Calendar;
-
-import com.cicc.gpio.Button;
-import com.cicc.gpio.ButtonListener;
-import com.cicc.gpio.ButtonPressedObserver;
-import com.cicc.gpio.Color;
-import com.cicc.gpio.LCDFactory;
-import com.cicc.gpio.MockupLCD;
 
 public class GpioTest {
 
@@ -28,29 +20,46 @@ public class GpioTest {
 	private static final byte[] code = { 3, 3, 2, 2, 4, 1, 4, 1 };
 
 	private static boolean showClock = false;
-	private static MockupLCD lcd;
+	private static LCDController lcd;
 
 	public static void main(String args[]) {
 		try {
-			lcd = (MockupLCD) LCDFactory.createLCD(true);
+			lcd = new LCDController(LCDController.LCD_MODE_WRITE);
+			lcd.aquireLock();
 			lcd.setCursorEnabled(false);
 			lcd.setBacklight(Color.RED);
 			lcd.write("Hello Ryan");
+			lcd.releaseLock();
 			Thread.sleep(2000);
 			clock();
 			ButtonPressedObserver obs = new ButtonPressedObserver(lcd);
 			obs.addButtonListener(new ButtonListener() {
-				
+
 				@Override
 				public void onButtonPressed(Button button) {
-					if(button == Button.SELECT){
+					if (button == Button.SELECT) {
 						System.out.println("Select pressed");
 					}
 				}
 			});
-//			hideClock();
-//			lcd.setBacklight(Lcd.BACKLIGHT_OFF);
-//			lcd.clear();
+
+			Thread test = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					int i = 0;
+					while (showClock) {
+						if (i > 99)
+							i = 0;
+							lcd.aquireLock();
+							lcd.setCursorPosition(0, 14);
+							lcd.write((i < 10 ? " " : "") + (new Integer(i)).toString());
+							lcd.releaseLock();
+						i++;
+					}
+				}
+			}, "Counter");
+			test.start();
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -72,11 +81,13 @@ public class GpioTest {
 			@Override
 			public void run() {
 				showClock = true;
+				lcd.aquireLock();
 				lcd.clear();
+				lcd.aquireLock();
 				while (showClock) {
 					Calendar cal = Calendar.getInstance();
 					int hour = cal.get(Calendar.HOUR);
-					if(hour == 0)
+					if (hour == 0)
 						hour = 12;
 					int minute = cal.get(Calendar.MINUTE);
 					int second = cal.get(Calendar.SECOND);
@@ -85,24 +96,30 @@ public class GpioTest {
 					int year = cal.get(Calendar.YEAR);
 					String time = (hour < 10 ? "0" : "") + hour + ":" + (minute < 10 ? "0" : "") + minute + ":" + (second < 10 ? "0" : "") + second;
 					String date = (month < 10 ? "0" : "") + month + "/" + (day < 10 ? "0" : "") + day + "/" + year;
-//					try {
+						lcd.aquireLock();
 						lcd.setCursorPosition(0, (16 - time.length()) / 2);
 						lcd.write(time);
 						lcd.setCursorPosition(1, (16 - date.length()) / 2);
 						lcd.write(date);
-//					} catch (IOException e1) {
-//						e1.printStackTrace();
-//					}
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						lcd.releaseLock();
+					long sleepTime = 1000 - System.currentTimeMillis() % 1000;
+					if (sleepTime >= 10) {
+						System.out.println("Sleep for " + sleepTime + " millis");
+						try {
+							Thread.sleep(sleepTime);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
-					
-					if (cal.get(Calendar.HOUR_OF_DAY) > 22 || cal.get(Calendar.HOUR_OF_DAY) < 6)
-						lcd.setBacklight(Color.OFF);
-					else
-						lcd.setBacklight(Color.RED);
+					lcd.aquireLock();
+					if ((cal.get(Calendar.HOUR_OF_DAY) > 22 || cal.get(Calendar.HOUR_OF_DAY) < 6)) {
+						if (lcd.getBacklight() != Color.OFF)
+							lcd.setBacklight(Color.OFF);
+					} else {
+						if (lcd.getBacklight() != Color.RED)
+							lcd.setBacklight(Color.RED);
+					}
+					lcd.releaseLock();
 				}
 			}
 		}, "Clock");

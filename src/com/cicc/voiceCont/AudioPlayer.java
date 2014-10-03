@@ -1,4 +1,6 @@
 package com.cicc.voiceCont;
+
+import java.io.BufferedInputStream;
 import java.io.IOException;
 
 import javax.sound.sampled.AudioFormat;
@@ -6,19 +8,21 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 
 public class AudioPlayer {
 
 	private static final int EXTERNAL_BUFFER_SIZE = 128000;
-	
+	private static Mixer mixer = null;
+
 	public static void playSound(final String name, boolean wait) {
 
-		if(wait)
+		if (wait)
 			play(name);
 		else {
 			Thread thread = new Thread(new Runnable() {
-				
+
 				@Override
 				public void run() {
 					play(name);
@@ -28,11 +32,17 @@ public class AudioPlayer {
 		}
 
 	}
-	
+
 	private static void play(String name) {
+		if(mixer == null)
+			for(Mixer.Info info : AudioSystem.getMixerInfo())
+				if(info.getName().contains("default")) {
+					mixer = AudioSystem.getMixer(info);
+					break;
+				}
 		AudioInputStream audioInputStream = null;
 		try {
-			audioInputStream = AudioSystem.getAudioInputStream(AudioPlayer.class.getResourceAsStream(name));
+			audioInputStream = AudioSystem.getAudioInputStream(new BufferedInputStream(AudioPlayer.class.getResourceAsStream(name)));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -42,7 +52,7 @@ public class AudioPlayer {
 		SourceDataLine line = null;
 		DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
 		try {
-			line = (SourceDataLine) AudioSystem.getLine(info);
+			line = (SourceDataLine) mixer.getLine(info);
 
 			line.open(audioFormat);
 		} catch (LineUnavailableException e) {
@@ -69,5 +79,5 @@ public class AudioPlayer {
 		line.drain();
 		line.close();
 	}
-	
+
 }

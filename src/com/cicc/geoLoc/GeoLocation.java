@@ -95,7 +95,6 @@ public class GeoLocation {
 		try {
 			String unparsedJsonResponce = rawRequest(req.toString(), GOOGLE_GEOLOC_URL);
 			float[] latLng = parseGeoLocResponce(unparsedJsonResponce);
-			System.out.println(latLng[0] + ", " + latLng[1]);
 			String location = getLocation(latLng);
 			return location;
 		} catch (IOException e) {
@@ -187,7 +186,6 @@ public class GeoLocation {
 		br = new BufferedReader(new InputStreamReader(urlConn.getInputStream(), Charset.forName("UTF-8")));
 		BufferedWriter write = new BufferedWriter(new FileWriter(new File("output.json")));
 		String response = br.readLine();
-		System.out.println(response);
 		write.write(response);
 		write.newLine();
 		boolean done = false;
@@ -195,7 +193,6 @@ public class GeoLocation {
 			String tmp = br.readLine();
 			if (tmp != null) {
 				response += tmp;
-				System.out.println(tmp);
 				write.write(tmp);
 				write.newLine();
 			} else

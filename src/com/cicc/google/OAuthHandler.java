@@ -108,8 +108,6 @@ public class OAuthHandler {
 		response = response.replaceAll(" ", "");
 		if (response != null && !response.startsWith("{\"error\"")) {
 			accessToken = Utils.substringBetween(response, "\"access_token\":\"", "\"");
-			System.out.println("accessToken = " + accessToken);
-			System.out.println(response);
 			try {
 				expireTime = System.currentTimeMillis() + (Long.parseLong(Utils.substringBetween(response, "\"expires_in\":", "}")) * 1000);
 			} catch (NumberFormatException e) {

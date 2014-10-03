@@ -14,3 +14,7 @@ tts*
 *.jar
 *.class
 f.*
+output.json
+networks.txt
+PythonCode.txt
+wolfram.xml
