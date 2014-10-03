@@ -8,7 +8,6 @@ import javax.xml.bind.PropertyException;
 
 import com.cicc.gpio.RealLCD.Direction;
 import com.cicc.texttospeech.Speak;
-import com.cicc.voiceCont.Main;
 
 public class LCDController implements ILCD {
 
@@ -19,6 +18,9 @@ public class LCDController implements ILCD {
 	private boolean propInternet, propAlm, propSilent;
 
 	public static final byte[] BELL_CHAR = { 0x0, 0x4, 0xe, 0xe, 0xe, 0x1f, 0x4, 0x0 };
+	public static final byte[][] CUSTOM_CHARS = {BELL_CHAR};
+	
+	public static final int CHAR_BELL_INDEX = 0;
 
 	public static final int LCD_MODE_MAIN = 0;
 	public static final int LCD_MODE_ALARM = 1;
@@ -29,9 +31,6 @@ public class LCDController implements ILCD {
 	public static final int LCD_PROP_INTERNET = 2;
 
 	public LCDController(int mode) {
-		System.out.println("\""+System.getProperty("user.name")+"\"");
-		System.out.println("\""+System.getProperty("os.name")+"\"");
-		System.out.println("\""+System.getProperty("os.arch")+"\"");
 		if (System.getProperty("os.arch").equals("arm") && System.getProperty("os.name").equals("Linux")) {
 			if (!System.getProperty("user.name").equals("root"))
 				try {
@@ -54,7 +53,7 @@ public class LCDController implements ILCD {
 
 	public void setMode(int mode) {
 		lcdMode = mode;
-		if(mode == LCD_MODE_MAIN)
+		if (mode == LCD_MODE_MAIN)
 			showMain();
 	}
 
@@ -92,6 +91,8 @@ public class LCDController implements ILCD {
 							e.printStackTrace();
 						}
 					}
+					if (second == 0)
+						updateProperties();
 					aquireLock();
 					if ((cal.get(Calendar.HOUR_OF_DAY) > 22 || cal.get(Calendar.HOUR_OF_DAY) < 6)) {
 						if (getBacklight() != Color.OFF)
@@ -130,8 +131,12 @@ public class LCDController implements ILCD {
 				e.printStackTrace();
 			}
 		}
-		// updateProperties();
+		updateProperties();
 
+	}
+
+	private void updateProperties() {
+		
 	}
 
 	public int getMode() {
