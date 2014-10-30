@@ -1,6 +1,6 @@
 package com.cicc.alpha;
 
-import com.cicc.texttospeech.Speak;
+import com.cicc.speech.Speak;
 import com.cicc.voiceCont.SpeechResponce;
 import com.cicc.voiceCont.Utils;
 

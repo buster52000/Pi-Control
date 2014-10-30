@@ -7,25 +7,34 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import javaFlacEncoder.FLACFileWriter;
 
-import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.TargetDataLine;
 import javax.swing.JOptionPane;
 
 import com.cicc.gpio.Color;
 import com.cicc.gpio.LCDController;
-import com.cicc.texttospeech.Speak;
+import com.cicc.speech.Speak;
+import com.darkprograms.speech.microphone.Microphone;
 import com.darkprograms.speech.microphone.MicrophoneAnalyzer;
+import com.darkprograms.speech.recognizer.GSpeechDuplex;
+import com.darkprograms.speech.recognizer.GSpeechResponseListener;
 import com.darkprograms.speech.recognizer.GoogleResponse;
 import com.darkprograms.speech.recognizer.Recognizer;
 
 public class Main {
 	private static MicrophoneAnalyzer microphone;
 	private Recognizer recognizer;
-	private String audioFileName = "f.wav";
+	private GSpeechDuplex duplex;
+	private GSpeechResponseListener micResponse;
+	// private String audioFileName = "f.wav";
 	private String flacFileName = "f.flac";
 	private boolean started = false;
-	private boolean checking = false;
 	private boolean responding = false;
+	private boolean checking = false;
 	private Timer micTimer;
 	private TimerTask task;
 	public static final String responces[] = { "I am listening", "Yes Sir?", "How may I help you?", "Yes Ryan?" };
@@ -33,10 +42,13 @@ public class Main {
 	private Action action;
 	public final String API_KEY;
 	public final String WOLFRAM_ID;
+	public final AudioFormat audioFormat;
 	private boolean loaded = false;
 	private final boolean testMode = false;
-	
-	public static final int SAMPLE_RATE = 16000;
+	private final boolean duplexEnabled = false;
+	private boolean micWatcherEnabled = false;
+
+	public static final int SAMPLE_RATE = (int) Microphone.getAudioFormat().getSampleRate();
 	public static LCDController lcd = null;
 
 	public Main() throws Exception {
@@ -53,6 +65,7 @@ public class Main {
 		String[] IDs = readIDs();
 		API_KEY = IDs[0];
 		WOLFRAM_ID = IDs[1];
+		audioFormat = Microphone.getAudioFormat();
 		initMic();
 		action = new Action(WOLFRAM_ID) {
 
@@ -67,8 +80,8 @@ public class Main {
 		lcd.clear();
 		lcd.setCursorPosition(0, 5);
 		lcd.write("System");
-		lcd.setCursorPosition(1, 4);
-		lcd.write("Started ");
+		lcd.setCursorPosition(1, 3);
+		lcd.write("Started...");
 		lcd.releaseLock();
 		Speak.say("System Started");
 		lcd.aquireLock();
@@ -76,66 +89,127 @@ public class Main {
 		lcd.setMode(LCDController.LCD_MODE_MAIN);
 		lcd.releaseLock();
 		loaded = true;
+		if (duplexEnabled)
+			startMicWatcher();
+	}
+
+	private void startMicWatcher() {
+		if (micWatcherEnabled)
+			return;
+		micWatcherEnabled = true;
+		microphone.close();
+		try {
+			duplex.recognize(microphone.getTargetDataLine(), audioFormat);
+		} catch (IOException | LineUnavailableException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void stopMicWatcher() {
+		if (!micWatcherEnabled)
+			return;
+		micWatcherEnabled = false;
+		microphone.getTargetDataLine().close();
 	}
 
 	public void initMic() {
 		if (!testMode) {
-			microphone = new MicrophoneAnalyzer(AudioFileFormat.Type.WAVE) {
+			if (duplexEnabled) {
+				duplex = new GSpeechDuplex(API_KEY);
+				micResponse = new GSpeechResponseListener() {
 
-				@Override
-				public void soundHeard(float lvl) {
-					if (lvl > 0.1 && !checking && (!responding || action.isOther()) && loaded) {
-						System.out.println("SoundHeard lvl - " + lvl);
-						if (started) {
-							micTimer.cancel();
-							task = new TimerTask() {
-
-								@Override
-								public void run() {
-									sndMngr.playStopListening();
-									try {
-										stop();
-									} catch (IOException | InterruptedException e) {
-										Speak.say("Error");
-										e.printStackTrace();
+					@Override
+					public void onResponse(GoogleResponse gr) {
+						if (gr != null) {
+							ArrayList<String> responses = gr.getAllPossibleResponses();
+							if (responses != null && responses.size() > 0)
+								for (String res : responses) {
+									res = res.toLowerCase();
+									if (res.contains("computer") || res.contains("jarvis") || res.contains("pi") || res.contains("cuter") || res.contains("pewter") || res.contains("peter")) {
+										stopMicWatcher();
+										startListening();
 									}
 								}
-							};
-							micTimer = new Timer(true);
-							micTimer.schedule(task, 1000);
-						} else {
-							checking = true;
-							try {
-								File audioFile = new File(audioFileName);
-								if (audioFile.exists())
-									audioFile.delete();
-								microphone.captureAudioToFile(audioFileName);
-							} catch (Exception e1) {
-								e1.printStackTrace();
-								Speak.say("Unable To Capture Audio to file");
-							}
-							try {
-								Thread.sleep(1000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-							if (checking) {
+						}
+					}
+				};
+				duplex.addResponseListener(micResponse);
+			}
+			microphone = new MicrophoneAnalyzer(FLACFileWriter.FLAC) {
+
+				@SuppressWarnings("unused")
+				@Override
+				public void soundHeard(float lvl) {
+					if (lvl > 0.1) {
+						if ((duplexEnabled && started) || (!checking && (!responding || action.isOther()) && loaded)) {
+							System.out.println("SoundHeard lvl - " + lvl);
+							if (started) {
+								micTimer.cancel();
+								task = new TimerTask() {
+
+									@Override
+									public void run() {
+										sndMngr.playStopListening();
+										try {
+											stop();
+										} catch (IOException | InterruptedException e) {
+											Speak.say("Error");
+											e.printStackTrace();
+										}
+									}
+								};
+								micTimer = new Timer(true);
+								micTimer.schedule(task, 1000);
+							} else if (!duplexEnabled) {
+								checking = true;
+								TargetDataLine tdl = microphone.getTargetDataLine();
+								final AudioInputStream ais = new AudioInputStream(tdl);
+								Thread thread = new Thread(new Runnable() {
+
+									@Override
+									public void run() {
+										try {
+											Thread.sleep(1000);
+											ais.close();
+										} catch (InterruptedException | IOException e) {
+											e.printStackTrace();
+										}
+									}
+
+								});
+								thread.start();
+								GoogleResponse gr = null;
+								try {
+									gr = recognizer.getRecognizedDataForAudioStream(ais, 5, SAMPLE_RATE);
+								} catch (IOException e2) {
+									e2.printStackTrace();
+									Speak.say("Unable to Recognize Sound");
+								}
+//								try {
+//									File flacFile = new File(flacFileName);
+//									if (flacFile.exists())
+//										flacFile.delete();
+//									microphone.captureAudioToFile(flacFile);
+//								} catch (Exception e1) {
+//									e1.printStackTrace();
+//									Speak.say("Unable To Capture Audio to file");
+//								}
+//								try {
+//									Thread.sleep(1000);
+//								} catch (InterruptedException e) {
+//									e.printStackTrace();
+//								}
 								microphone.close();
 								microphone.open();
 								checking = false;
-								GoogleResponse gr = null;
-								try {
-									System.out.println("Pre Recognize");
-									File audioFile = new File(audioFileName);
-									File flacFile = new File(flacFileName);
-									if (flacFile.exists())
-										flacFile.delete();
-									Utils.convertWavToFlac(audioFile, flacFile, SAMPLE_RATE);
-									gr = recognizer.getRecognizedDataForFlac(flacFileName, 5, SAMPLE_RATE);
-								} catch (Exception e1) {
-									e1.printStackTrace();
-									Speak.say("Unable to Recognize Sound");
-								}
+//								GoogleResponse gr = null;
+//								try {
+//									System.out.println("Pre Recognize");
+//									gr = recognizer.getRecognizedDataForFlac(flacFileName, 5, SAMPLE_RATE);
+//								} catch (Exception e1) {
+//									e1.printStackTrace();
+//									Speak.say("Unable to Recognize Sound");
+//								}
 								System.out.println("Post Recognize");
 								if (gr != null) {
 									ArrayList<String> response = gr.getAllPossibleResponses();
@@ -175,7 +249,7 @@ public class Main {
 
 	}
 
-	public void startListening() {
+	private void startListening() {
 		if (started)
 			return;
 		started = true;
@@ -197,12 +271,12 @@ public class Main {
 		microphone.close();
 		microphone.open();
 		try {
-			File audioFile = new File(audioFileName);
-			if (audioFile.exists())
-				audioFile.delete();
+			File flacFile = new File(flacFileName);
+			if (flacFile.exists())
+				flacFile.delete();
 			sndMngr.playListening();
 			System.out.println("Started");
-			microphone.captureAudioToFile(audioFileName);
+			microphone.captureAudioToFile(flacFile);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			Speak.say("Unable To Capture Audio to file");
@@ -224,7 +298,7 @@ public class Main {
 		micTimer.schedule(task, 5000);
 	}
 
-	public void stop() throws IOException, InterruptedException {
+	private void stop() throws IOException, InterruptedException {
 		if (responding && !action.isOther())
 			return;
 		GoogleResponse gr = null;
@@ -241,9 +315,6 @@ public class Main {
 			lcd.write("Processing....");
 			lcd.releaseLock();
 			try {
-				File flacFile = new File(flacFileName);
-				File audioFile = new File(audioFileName);
-				Utils.convertWavToFlac(audioFile, flacFile, SAMPLE_RATE);
 				gr = recognizer.getRecognizedDataForFlac(flacFileName, 5, SAMPLE_RATE);
 			} catch (Exception e1) {
 				e1.printStackTrace();
@@ -270,6 +341,8 @@ public class Main {
 			if (action.isOther())
 				action.setSaid(null);
 		}
+		if (duplexEnabled)
+			startMicWatcher();
 	}
 
 	public void action(ArrayList<String> text) throws IOException, InterruptedException {

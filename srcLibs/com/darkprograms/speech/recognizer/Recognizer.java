@@ -1,9 +1,18 @@
 package com.darkprograms.speech.recognizer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import javaFlacEncoder.FLACFileWriter;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 
 import com.darkprograms.speech.util.StringUtil;
 
@@ -482,6 +491,73 @@ public class Recognizer {
 
 		return response;
 
+	}
+	
+	public GoogleResponse getRecognizedDataForAudioStream(AudioInputStream in, int maxResults, int sampleRate) throws IOException {
+		String response = rawRequest(in, maxResults, sampleRate);
+		GoogleResponse googleResponse = new GoogleResponse();
+		parseResponse(response, googleResponse);
+		return googleResponse;
+	}
+	
+	private String rawRequest(AudioInputStream in, int maxResults, int sampleRate) throws IOException {
+		URL url;
+		URLConnection urlConn;
+		OutputStream outputStream;
+		BufferedReader br;
+
+		StringBuilder sb = new StringBuilder(GOOGLE_RECOGNIZER_URL);
+		sb.append("key=" + API_KEY);
+		if (language != null) {
+			sb.append("&lang=");
+			sb.append(language);
+		} else {
+			sb.append("&lang=auto");
+		}
+		if (!profanityFilter) {
+			sb.append("&pfilter=0");
+		}
+		sb.append("&maxresults=");
+		sb.append(maxResults);
+
+		// URL of Remote Script.
+		url = new URL(sb.toString());
+
+		// Open New URL connection channel.
+		urlConn = url.openConnection();
+
+		// we want to do output.
+		urlConn.setDoOutput(true);
+
+		// No caching
+		urlConn.setUseCaches(false);
+
+		// Specify the header content type.
+		urlConn.setRequestProperty("Content-Type", "audio/x-flac; rate=" + sampleRate);
+
+		// Send POST output.
+		outputStream = urlConn.getOutputStream();
+
+		AudioSystem.write(in, FLACFileWriter.FLAC, outputStream);
+
+		// Get response data.
+		br = new BufferedReader(new InputStreamReader(urlConn.getInputStream(), Charset.forName("UTF-8")));
+
+		String response = br.readLine();
+		System.out.println(response);
+		boolean done = false;
+		while (response != null && !done) {
+			String tmp = br.readLine();
+			System.out.println(tmp);
+			if (tmp != null)
+				response += tmp;
+			else
+				done = true;
+		}
+		System.out.println("Unparsed Responce = " + response);
+		br.close();
+
+		return response;
 	}
 
 }

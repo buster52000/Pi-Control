@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import com.cicc.texttospeech.Speak;
+import com.cicc.speech.Speak;
 
 public class Utils {
 
@@ -38,6 +38,7 @@ public class Utils {
 		return -1;
 	}
 
+	//TODO: Remove as this is no longer needed
 	public static void convertWavToFlac(File wavFile, File flacFile, int sampleRate) {
 		String os = System.getProperty("os.name");
 		if (flacFile.exists())

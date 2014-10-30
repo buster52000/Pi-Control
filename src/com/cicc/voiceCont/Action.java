@@ -16,8 +16,8 @@ import com.cicc.alarm.AlarmSpeechResponse;
 import com.cicc.alpha.AlphaSpeechResponse;
 import com.cicc.geoLoc.GeoLocSpeechResponse;
 import com.cicc.google.GoogleSpeechResponse;
-import com.cicc.texttospeech.Speak;
-import com.cicc.texttospeech.TtsSpeechResponse;
+import com.cicc.speech.Speak;
+import com.cicc.speech.TtsSpeechResponse;
 import com.cicc.weather.WeatherSpeechResponse;
 
 public abstract class Action {

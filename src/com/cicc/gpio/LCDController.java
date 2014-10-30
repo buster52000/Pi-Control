@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.xml.bind.PropertyException;
 
 import com.cicc.gpio.RealLCD.Direction;
-import com.cicc.texttospeech.Speak;
+import com.cicc.speech.Speak;
 
 public class LCDController implements ILCD {
 

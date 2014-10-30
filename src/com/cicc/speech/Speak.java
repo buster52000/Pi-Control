@@ -1,4 +1,4 @@
-package com.cicc.texttospeech;
+package com.cicc.speech;
 
 import java.io.BufferedInputStream;
 import java.io.File;

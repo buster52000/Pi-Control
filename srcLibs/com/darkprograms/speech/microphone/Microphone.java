@@ -163,7 +163,7 @@ public class Microphone {
 	 * @return Returns AudioFormat to be used later when capturing audio from
 	 *         microphone
 	 */
-	public AudioFormat getAudioFormat() {
+	public static AudioFormat getAudioFormat() {
 		float sampleRate = 16000.0F;
 		// 8000,11025,16000,22050,44100
 		int sampleSizeInBits = 16;
@@ -172,7 +172,7 @@ public class Microphone {
 		// 1,2
 		boolean signed = true;
 		// true,false
-		boolean bigEndian = false;
+		boolean bigEndian = true;
 		// true,false
 		return new AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian);
 	}	

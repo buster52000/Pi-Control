@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 
 import com.cicc.gpio.Color;
 import com.cicc.gpio.LCDController;
-import com.cicc.texttospeech.Speak;
+import com.cicc.speech.Speak;
 
 public class SystemSpeechCommands extends SpeechResponce {
 

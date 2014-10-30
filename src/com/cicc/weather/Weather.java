@@ -8,7 +8,7 @@ import org.bbelovic.weather.YahooWeatherReader;
 
 import com.cicc.geoLoc.GeoLocation;
 import com.cicc.gpio.LCDController;
-import com.cicc.texttospeech.Speak;
+import com.cicc.speech.Speak;
 import com.cicc.voiceCont.Main;
 import com.smartechz.geoloc.GeoPlanetExplorer;
 
